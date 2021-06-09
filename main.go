@@ -19,9 +19,10 @@ func main() {
 	flag.StringVar(&query, "query", "", "Github API Search query")
 	flag.StringVar(&sort, "sort", "", "Github API Search sort criteria")
 	flag.Parse()
-
+	// proxyUrl, _ := url.Parse("http://159.65.14.136:8080")
+	// httpClient := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+	// client := github.NewClient(httpClient)
 	client := github.NewClient(nil)
-
 	page := 1
 	repoCount := 0
 	total := 0
