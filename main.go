@@ -28,6 +28,7 @@ func main() {
 	total := 0
 
 	inputScanner := bufio.NewScanner(os.Stdin)
+
 	for {
 		opts := &github.SearchOptions{
 			Sort:  sort,
@@ -42,7 +43,7 @@ func main() {
 		if err != nil {
 			rateLimitErr, isRateLimitError := err.(*github.RateLimitError)
 			if isRateLimitError {
-				sleepDuration := time.Until(rateLimitErr.Rate.Reset.Time)
+				sleepDuration := time.Until(rateLimitErr.Rate.Reset.Time) + time.Second
 				fmt.Printf("Rate limit: reset in %v\n", sleepDuration)
 				time.Sleep(sleepDuration)
 				continue
@@ -57,12 +58,13 @@ func main() {
 			if total == 0 {
 				break
 			}
-			fmt.Print("Do you want to see all? (y/N) > ")
+			// fmt.Print("Do you want to see all? (y/N) > ")
+			fmt.Print("Press enter to show the list...")
 			inputScanner.Scan()
-			answer := strings.ToLower(strings.TrimSpace(inputScanner.Text()))
-			if answer == "" || answer == "n" {
-				break
-			}
+			// answer := strings.ToLower(strings.TrimSpace(inputScanner.Text()))
+			// if answer == "" || answer == "n" {
+			// 	break
+			// }
 		}
 		if total == 0 {
 			fmt.Println("Empty result")
@@ -70,17 +72,35 @@ func main() {
 		}
 		for _, repo := range result.Repositories {
 			repoCount++
-			archived := "          "
+			archived := ""
+			updatedAt := repo.GetUpdatedAt()
+
 			if repo.GetArchived() {
 				archived = "[Archived]"
 			}
-			fmt.Printf("%10d# [★ %d] %s %v %v\n", repoCount, repo.GetStargazersCount(), archived,
-				repo.GetCloneURL(), repo.GetDescription())
+			fmt.Printf("%10d | ★ %5d | %s | %v | %04d/%02d | %v\n",
+				repoCount,
+				repo.GetStargazersCount(),
+				padding(archived, 10, "left"),
+				padding(repo.GetCloneURL(), 60, "right"),
+				updatedAt.Year(), updatedAt.Month(),
+				padding(repo.GetDescription(), 120, "right"))
 		}
 		if repoCount >= total {
 			fmt.Println("The End.")
 			break
 		}
 		page++
+	}
+}
+
+func padding(str string, length int, direction string) string {
+	if len(str) >= length {
+		return str[0:length]
+	}
+	if direction == "left" {
+		return strings.Repeat(" ", length-len(str)) + str
+	} else {
+		return str + strings.Repeat(" ", length-len(str))
 	}
 }
